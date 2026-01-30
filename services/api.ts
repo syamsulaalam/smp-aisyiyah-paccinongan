@@ -1,188 +1,194 @@
+import axios from 'axios';
 import { NewsArticle, AcademicInfo, GalleryPhoto, SchoolProfile, SchoolAgenda } from '../types';
 
-const BASE_URL = 'http://localhost:5000/api';
-let authToken: string | null = null;
+// --- 1. KONFIGURASI URL (OTOMATIS) ---
+// Ini akan membaca settingan dari Vercel. Jika kosong, pakai localhost.
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-// --- LOGIKA PERSISTENSI PROFIL (LocalStorage) ---
+// Buat instance axios agar codingan lebih rapi
+const apiInstance = axios.create({
+    baseURL: API_URL, // Hapus '/api' disini karena route kita sudah pakai /api/...
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
 
-// Fungsi untuk mengambil data awal dari LocalStorage atau pakai Default
-const getInitialProfile = (): SchoolProfile => {
-    const savedData = localStorage.getItem('school_profile_data');
-    if (savedData) {
-        try {
-            return JSON.parse(savedData);
-        } catch (error) {
-            console.error("Gagal parsing data profil dari localStorage", error);
-        }
+// --- 2. INTERCEPTOR (Jaga-jaga Token) ---
+apiInstance.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token'); // Asumsi token disimpan dengan nama 'token'
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    // Data Default jika belum ada yang disimpan
-    return {
-        name: 'SMP Aisyiyah Paccinongang',
-        vision: 'Terwujudnya sekolah islami yang unggul...',
-        mission: ['Mencerdaskan bangsa', 'Berakhlak mulia'],
-        history: 'Sekolah ini berdiri sejak...',
-        address: 'Jl. H.M. Yasin Limpo No. 25',
-        phone: '(0411) 123-4567',
-        email: 'info@smp.sch.id',
-    };
-};
+    return config;
+});
 
-// Inisialisasi mockProfile dari LocalStorage
-let mockProfile: SchoolProfile = getInitialProfile();
-
-// --- API SERVICES ---
 export const api = {
-    setAuthToken: (token: string | null) => { authToken = token; },
-
-    // 1. LOGIN & RESET
+    // A. LOGIN & AUTH
     login: async (username: string, password: string) => {
-        const res = await fetch(`${BASE_URL}/login`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        if(!res.ok) throw new Error(data.message);
-        if(data.token) authToken = data.token;
-        return data;
+        // Otomatis ke: https://backend-kamu.vercel.app/api/login
+        const response = await apiInstance.post('/api/login', { username, password });
+        return response.data;
     },
 
-    resetPassword: async (username: string, newPassword: string, secretKey: string) => {
-        const res = await fetch(`${BASE_URL}/reset-password`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ username, newPassword, secretKey })
-        });
-        return res.json();
-    },
-
-    // 2. BERITA
+    // B. BERITA (NEWS)
     getNews: async (publishedOnly = false) => {
         try {
-            const res = await fetch(`${BASE_URL}/berita`);
-            const data = await res.json();
-            return data.map((item: any) => ({
+            const response = await apiInstance.get('/api/berita');
+            // Mapping Data: Backend (Indo) -> Frontend (Inggris)
+            return response.data.map((item: any) => ({
                 id: item.id,
                 title: item.judul,
                 content: item.isi,
-                imageUrl: item.gambar,
+                imageUrl: item.gambar, // URL Cloudinary sudah beres dari backend
                 status: 'published',
                 createdAt: item.tanggal
             }));
-        } catch (e) { return []; }
+        } catch (error) {
+            console.error("Gagal ambil berita", error);
+            return [];
+        }
     },
 
     addNews: async (data: any) => {
+        // Cek apakah data berupa FormData (Upload Gambar)
         if (data instanceof FormData) {
-            const res = await fetch(`${BASE_URL}/berita`, {
-                method: 'POST',
-                body: data 
+            const response = await apiInstance.post('/api/berita', data, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
-            return res.json();
+            return response.data;
         } else {
-            const res = await fetch(`${BASE_URL}/berita`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ judul: data.title, isi: data.content, gambar: data.imageUrl })
+            // Jika cuma teks
+            const response = await apiInstance.post('/api/berita', {
+                judul: data.title,
+                isi: data.content,
+                gambar: data.imageUrl
             });
-            return res.json();
+            return response.data;
         }
     },
-    
+
     deleteNews: async (id: number) => {
-        await fetch(`${BASE_URL}/berita/${id}`, { method: 'DELETE' });
+        await apiInstance.delete(`/api/berita/${id}`);
     },
     
-    updateNews: async (article: any) => article, 
+    // Fungsi dummy untuk kompatibilitas
     getNewsById: async (id: number) => {
         const all = await api.getNews();
         return all.find((n: any) => n.id === id);
     },
+    updateNews: async (article: any) => article,
 
-    // 3. AKADEMIK
+
+    // C. AKADEMIK (AGENDA)
     getAcademicInfo: async () => {
         try {
-            const res = await fetch(`${BASE_URL}/akademik`);
-            const data = await res.json();
-            return data.map((item: any) => ({
+            const response = await apiInstance.get('/api/akademik');
+            return response.data.map((item: any) => ({
                 id: item.id,
                 title: item.judul,
                 description: item.deskripsi,
                 date: item.tanggal,
                 type: item.jenis
             }));
-        } catch (e) { return []; }
+        } catch (error) { return []; }
+    },
+
+    getAgenda: async () => {
+        try {
+            const response = await apiInstance.get('/api/akademik');
+            // Ambil 3 data terbaru untuk dashboard
+            return response.data.slice(0, 3).map((item: any) => ({
+                id: item.id,
+                event: item.judul,
+                date: item.tanggal
+            }));
+        } catch (error) { return []; }
     },
 
     addAcademicInfo: async (info: any) => {
-        const res = await fetch(`${BASE_URL}/akademik`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(info)
-        });
-        return res.json();
+        const response = await apiInstance.post('/api/akademik', info);
+        return response.data;
     },
 
     deleteAcademicInfo: async (id: number) => {
-        await fetch(`${BASE_URL}/akademik/${id}`, { method: 'DELETE' });
+        await apiInstance.delete(`/api/akademik/${id}`);
     },
-    
-    updateAcademicInfo: async (info: any) => info,
 
-    // 4. GALERI
+
+    // D. GALERI
     getGallery: async () => {
         try {
-            const res = await fetch(`${BASE_URL}/galeri`);
-            const data = await res.json();
-            return data.map((item: any) => ({
+            const response = await apiInstance.get('/api/galeri');
+            return response.data.map((item: any) => ({
                 id: item.id,
                 title: item.deskripsi,
                 imageUrl: item.url_gambar,
                 category: item.kategori,
                 createdAt: item.tanggal
             }));
-        } catch (e) { return []; }
+        } catch (error) { return []; }
     },
-    
-    addGalleryPhoto: async (formData: any) => { 
-         const res = await fetch(`${BASE_URL}/galeri`, {
-            method: 'POST',
-            body: formData 
+
+    addGalleryPhoto: async (formData: any) => {
+        const response = await apiInstance.post('/api/galeri', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
         });
-        return res.json();
+        return response.data;
     },
 
     deleteGalleryPhoto: async (id: number) => {
-        await fetch(`${BASE_URL}/galeri/${id}`, { method: 'DELETE' });
+        await apiInstance.delete(`/api/galeri/${id}`);
     },
 
-    // 5. AGENDA
-    getAgenda: async () => {
+
+    // E. PROFIL SEKOLAH (Database - BUKAN LocalStorage lagi)
+    getProfile: async () => {
         try {
-            const res = await fetch(`${BASE_URL}/akademik`);
-            const data = await res.json();
-            return data.slice(0, 3).map((item: any) => ({
-                id: item.id,
-                event: item.judul,
-                date: item.tanggal
-            }));
-        } catch (e) { return []; }
+            const response = await apiInstance.get('/api/profil');
+            const data = response.data;
+            
+            // Backend sudah mengirim data yang rapi (cek backend index.js)
+            // Tapi kita pastikan mappingnya aman
+            return {
+                name: data.nama_sekolah || data.name,
+                vision: data.visi || data.vision,
+                mission: data.misi || data.mission, // Array string
+                // Data tambahan yang mungkin belum ada di tabel tapi ada di tipe
+                history: data.sejarah || 'Sejarah belum diisi',
+                address: data.alamat || 'Alamat belum diisi',
+                phone: data.telepon || '-',
+                email: data.email || '-',
+                npsn: data.npsn,
+                status: data.status_sekolah || data.status,
+                accreditation: data.akreditasi || data.accreditation,
+                province: data.provinsi || data.province,
+                city: data.kota || data.city,
+                postalCode: data.kode_pos || data.postalCode
+            };
+        } catch (error) {
+            console.error("Gagal ambil profil", error);
+            // Fallback data agar tidak crash
+            return {
+                name: 'SMP Aisyiyah Paccinongang',
+                vision: '',
+                mission: []
+            };
+        }
     },
 
-    // --- PERBAIKAN PROFIL (Sekarang Menggunakan LocalStorage) ---
-    getProfile: () => {
-        // Mengembalikan data terbaru yang ada di memori (yang sudah di-sync dengan localstorage)
-        return Promise.resolve({ ...mockProfile });
+    updateProfile: async (data: any) => {
+        // Kirim ke database
+        const response = await apiInstance.post('/api/profil', data);
+        return response.data;
     },
 
-    updateProfile: (p: SchoolProfile) => {
-        // Simpan ke variabel lokal (RAM)
-        mockProfile = p; 
-        
-        // Simpan secara permanen ke Browser (LocalStorage)
-        localStorage.setItem('school_profile_data', JSON.stringify(p));
-        
-        return Promise.resolve();
-    },
+    // F. STATISTIK
+    getDashboardStats: async () => {
+        try {
+            const response = await apiInstance.get('/api/dashboard-stats');
+            return response.data;
+        } catch (error) {
+            return { berita: 0, akademik: 0, galeri: 0, pengunjung: 0 };
+        }
+    }
 };
