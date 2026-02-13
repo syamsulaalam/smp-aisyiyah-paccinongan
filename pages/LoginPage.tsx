@@ -5,8 +5,8 @@ import { api } from '../services/api';
 
 const LoginPage: React.FC = () => {
     // --- 1. DEKLARASI VARIABEL (PENTING) ---
-    const [username, setUsername] = useState('admin');
-    const [password, setPassword] = useState('admin123');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     
