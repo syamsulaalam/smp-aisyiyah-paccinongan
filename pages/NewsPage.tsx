@@ -93,7 +93,7 @@ const NewsPage: React.FC = () => {
                                                     <p className="text-sm font-medium text-blue-600">
                                                         Kegiatan Sekolah
                                                     </p>
-                                                    <NavLink to={`/news/${article.id}`} className="block mt-2">
+                                                    <NavLink to={`/berita/${article.id}`} className="block mt-2">
                                                         <h3 className="text-xl font-semibold text-gray-900 hover:text-blue-700 transition-colors line-clamp-2">
                                                             {article.title}
                                                         </h3>
