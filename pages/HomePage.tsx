@@ -76,7 +76,8 @@ const HomePage: React.FC = () => {
           <div className="max-w-xl">
             <p className="text-lg font-medium text-blue-700">Selamat Datang di Website Resmi</p>
             <h1 className="text-4xl md:text-6xl font-extrabold text-blue-900 mt-2">SMP Aisyiyah Paccinongang</h1>
-            <p className="mt-4 text-lg md:text-xl text-gray-600">Sekolah Berkemajuan, Unggul dalam Prestasi dan Akhlak Mulia.</p>
+            <p className="mt-4 text-lg md:text-xl text-gray-600">Menerapkan Amar ma'ruf nahi mungkar
+Dan Mencetak generasi muslim yang berakhlak mulia,unggul, Modern, Integratif,dan berkemajuan</p>
             <NavLink to="/profil" className="mt-8 inline-block bg-blue-900 text-white font-bold py-3 px-8 rounded-md hover:bg-blue-600 transition-colors shadow-lg">
               Profil Sekolah
             </NavLink>
