@@ -76,7 +76,7 @@ const NewsPage: React.FC = () => {
                                         <div key={article.id} className="flex flex-col rounded-lg shadow-lg overflow-hidden bg-white hover:shadow-2xl transition-shadow duration-300">
                                             <div className="flex-shrink-0">
                                                 {/* Link ke Detail Berita */}
-                                                <NavLink to={`/news/${article.id}`}> 
+                                                <NavLink to={`/berita/${article.id}`}> 
                                                     <img 
                                                         className="h-48 w-full object-cover transform hover:scale-105 transition-transform duration-500" 
                                                         // Gunakan gambar placeholder jika kosong
