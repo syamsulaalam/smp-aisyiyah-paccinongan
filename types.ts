@@ -1,10 +1,11 @@
+/// <reference types="vite/client" />
 
 export interface NewsArticle {
   id: number;
   title: string;
   content: string;
   imageUrl: string;
-  status: 'draft' | 'published';
+  status: "draft" | "published";
   createdAt: string;
 }
 
@@ -13,7 +14,7 @@ export interface AcademicInfo {
   title: string;
   description: string;
   date: string;
-  type: 'Pengumuman' | 'Jadwal Ujian' | 'Kalender Akademik' | 'PPDB';
+  type: "Pengumuman" | "Jadwal Ujian" | "Kalender Akademik" | "PPDB";
 }
 
 export interface GalleryPhoto {
@@ -25,17 +26,17 @@ export interface GalleryPhoto {
 }
 
 export interface SchoolProfile {
-    name: string;
-    vision: string;
-    mission: string[];
-    history: string;
-    address: string;
-    phone: string;
-    email: string;
+  name: string;
+  vision: string;
+  mission: string[];
+  history: string;
+  address: string;
+  phone: string;
+  email: string;
 }
 
 export interface SchoolAgenda {
-    id: number;
-    event: string;
-    date: string;
+  id: number;
+  event: string;
+  date: string;
 }
