@@ -25,22 +25,25 @@ const AcademicFormModal: React.FC<{
     };
 
     const handleSubmit = async (e: FormEvent) => {
-        e.preventDefault();
-        setIsSaving(true);
-        try {
-            if (isEditMode) {
-                await api.updateAcademicInfo(formData as AcademicInfo);
-            } else {
-                await api.addAcademicInfo(formData as Omit<AcademicInfo, 'id'>);
-            }
-            onSave();
-        } catch (error) {
-            console.error('Failed to save academic info', error);
-            alert('Gagal menyimpan info akademik.');
-        } finally {
-            setIsSaving(false);
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+        if (isEditMode) {
+            // AMBIL ID SECARA TERPISAH
+            const dataWithId = formData as AcademicInfo;
+            // KIRIM DUA PARAMETER: id DAN datanya
+            await api.updateAcademicInfo(dataWithId.id, dataWithId);
+        } else {
+            await api.addAcademicInfo(formData as Omit<AcademicInfo, 'id'>);
         }
-    };
+        onSave();
+    } catch (error) {
+        console.error('Failed to save academic info', error);
+        alert('Gagal menyimpan info akademik.');
+    } finally {
+        setIsSaving(false);
+    }
+};
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">

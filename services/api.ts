@@ -75,7 +75,18 @@ export const api = {
     const all = await api.getNews();
     return all.find((n: any) => n.id === id);
   },
-  updateNews: async (article: any) => article,
+
+  updateNews: async (id: number, article: any) => {
+    try {
+      console.log(`📝 API.updateNews sending to /api/berita/${id}:`, article);
+      const response = await apiInstance.put(`/api/berita/${id}`, article);
+      console.log(`✅ API.updateNews response:`, response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`❌ Gagal update berita ${id}:`, error);
+      throw error;
+    }
+  },
 
   // C. AKADEMIK (AGENDA)
   getAcademicInfo: async () => {
@@ -108,12 +119,47 @@ export const api = {
   },
 
   addAcademicInfo: async (info: any) => {
-    const response = await apiInstance.post("/api/akademik", info);
-    return response.data;
+    try {
+      console.log("📤 API.addAcademicInfo sending:", info);
+      const response = await apiInstance.post("/api/akademik", info);
+      console.log("✅ API.addAcademicInfo response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("❌ Gagal tambah akademik:", error);
+      throw error;
+    }
   },
 
+  // --- File: api.ts ---
+
+updateAcademicInfo: async (id: number, info: any) => {
+  try {
+    // Tambahkan pengecekan ini untuk debugging
+    if (typeof id === 'object') {
+      console.error("❌ ERROR: 'id' yang dikirim adalah object! Periksa pemanggilan fungsi di UI.");
+    }
+
+    console.log(`📝 API.updateAcademicInfo sending to /api/akademik/${id}:`, info);
+    
+    // Pastikan menggunakan ID yang benar
+    const response = await apiInstance.put(`/api/akademik/${id}`, info);
+    
+    console.log(`✅ API.updateAcademicInfo response:`, response.data);
+    return response.data;
+  } catch (error) {
+    console.error(`❌ Gagal update akademik ${id}:`, error);
+    throw error;
+  }
+},
   deleteAcademicInfo: async (id: number) => {
-    await apiInstance.delete(`/api/akademik/${id}`);
+    try {
+      console.log(`🗑️  API.deleteAcademicInfo removing /api/akademik/${id}`);
+      await apiInstance.delete(`/api/akademik/${id}`);
+      console.log(`✅ API.deleteAcademicInfo success`);
+    } catch (error) {
+      console.error(`❌ Gagal hapus akademik ${id}:`, error);
+      throw error;
+    }
   },
 
   // D. GALERI

@@ -60,9 +60,19 @@ const NewsFormModal: React.FC<{
     setIsSaving(true);
     try {
       if (isEditMode) {
-        // Saat ini backend belum mendukung edit gambar/file, jadi pakai JSON biasa
-        // Nanti bisa diupdate jika backend sudah siap rute PUT
-        await api.updateNews(formData as NewsArticle);
+        // UNTUK EDIT BERITA (PUT)
+        // Ambil ID dan data untuk dikirim
+        const dataWithId = formData as NewsArticle;
+        const submitData = {
+          judul: dataWithId.title,
+          isi: dataWithId.content,
+          gambar: dataWithId.imageUrl, // Hanya URL
+        };
+
+        console.log(`📝 Mengupdate berita dengan ID ${dataWithId.id}...`);
+        // Kirim ke API dengan parameter: id dan data
+        const response = await api.updateNews(dataWithId.id, submitData);
+        console.log("✅ Response dari backend:", response);
       } else {
         // UNTUK TAMBAH BERITA BARU (POST)
         // Kirim langsung tanpa FormData (tidak perlu upload file)

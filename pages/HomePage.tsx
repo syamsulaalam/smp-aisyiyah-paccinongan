@@ -76,7 +76,11 @@ const HomePage: React.FC = () => {
           <div className="max-w-xl">
             <p className="text-lg font-medium text-blue-700">Selamat Datang di Website Resmi</p>
             <h1 className="text-4xl md:text-6xl font-extrabold text-blue-900 mt-2">SMP Aisyiyah Paccinongang</h1>
+<<<<<<< HEAD
             <p className="mt-4 text-lg md:text-xl text-gray-600">Menerapkan amar ma’ruf nahi mungkar dan mencetak generasi Muslim yang berakhlak mulia, unggul, modern, integratif, dan berkemajuan.</p>
+=======
+            <p className="mt-4 text-lg md:text-xl text-gray-600">Menerapkan Amar ma'ruf nahi mungkar & Mencetak generasi muslim yang berakhlak mulia, unggul, Modern, Integratif,dan berkemajuan</p>
+>>>>>>> f4b391b (fix: implementasi rute update dan perbaikan payload api akademik serta berita)
             <NavLink to="/profil" className="mt-8 inline-block bg-blue-900 text-white font-bold py-3 px-8 rounded-md hover:bg-blue-600 transition-colors shadow-lg">
               Profil Sekolah
             </NavLink>
