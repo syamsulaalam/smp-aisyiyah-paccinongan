@@ -59,42 +59,71 @@ const NewsFormModal: React.FC<{
     e.preventDefault();
     setIsSaving(true);
     try {
+      // Validasi
+      if (!formData.title || !formData.content) {
+        alert("⚠️ Judul dan Isi Berita harus diisi!");
+        setIsSaving(false);
+        return;
+      }
+
       if (isEditMode) {
         // UNTUK EDIT BERITA (PUT)
-        // Ambil ID dan data untuk dikirim
         const dataWithId = formData as NewsArticle;
+
+        // ⭐ PENTING: Transform frontend format ke backend format
         const submitData = {
-          judul: dataWithId.title,
-          isi: dataWithId.content,
-          gambar: dataWithId.imageUrl, // Hanya URL
+          judul: dataWithId.title, // title → judul
+          isi: dataWithId.content, // content → isi
+          gambar: dataWithId.imageUrl, // imageUrl → gambar (bisa URL atau Base64)
         };
 
         console.log(`📝 Mengupdate berita dengan ID ${dataWithId.id}...`);
-        // Kirim ke API dengan parameter: id dan data
+        console.log("📦 Payload yang dikirim:", {
+          judul: submitData.judul.substring(0, 30) + "...",
+          isi: submitData.isi.substring(0, 30) + "...",
+          gambarLength: submitData.gambar?.length || 0,
+          gambarIsBase64: submitData.gambar?.startsWith("data:image") ? "✅ Ya" : "❌ URL",
+        });
+
         const response = await api.updateNews(dataWithId.id, submitData);
         console.log("✅ Response dari backend:", response);
+
+        onSave();
+        alert("✅ Berita berhasil diupdate!");
       } else {
         // UNTUK TAMBAH BERITA BARU (POST)
-        // Kirim langsung tanpa FormData (tidak perlu upload file)
         const submitData = {
           judul: formData.title,
           isi: formData.content,
-          gambar: formData.imageUrl, // Hanya URL
+          gambar: formData.imageUrl, // Bisa URL atau Base64
         };
 
-        console.log("📤 Mengirim berita ke backend...");
-        // Kirim ke API
+        console.log("📤 Mengirim berita baru ke backend...");
+        console.log("📦 Payload yang dikirim:", {
+          judul: submitData.judul.substring(0, 30) + "...",
+          isi: submitData.isi.substring(0, 30) + "...",
+          gambarLength: submitData.gambar?.length || 0,
+          gambarIsBase64: submitData.gambar?.startsWith("data:image") ? "✅ Ya" : "❌ URL",
+        });
+
         const response = await api.addNews(submitData);
         console.log("✅ Response dari backend:", response);
+
+        onSave();
+        alert("✅ Berita berhasil ditambahkan!");
       }
-      onSave();
-      alert("✅ Berita berhasil disimpan!");
     } catch (error: any) {
       console.error("❌ Failed to save article:", error);
 
       let errorMsg = "Gagal menyimpan berita.";
       if (error.response?.status === 0) {
-        errorMsg = "❌ Backend tidak merespons. Pastikan backend menyala di port 5000.";
+        errorMsg = "❌ Backend tidak merespons (port 5000 mati atau CORS error).";
+      } else if (error.response?.status === 404) {
+        errorMsg = "❌ Endpoint tidak ditemukan. Periksa rute di backend.";
+      } else if (error.response?.status === 413) {
+        errorMsg = "❌ Payload terlalu besar. Kurangi ukuran gambar atau pastikan backend limit 50mb.";
+      } else if (error.response?.data?.error) {
+        errorMsg = `❌ ${error.response.data.error}`;
       } else if (error.response?.data?.message) {
         errorMsg = `❌ ${error.response.data.message}`;
       } else if (error.message) {
