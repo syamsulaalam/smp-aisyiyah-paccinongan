@@ -1,20 +1,21 @@
-import React from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import HomePage from './pages/HomePage';
-import ProfilePage from './pages/ProfilePage';
-import NewsPage from './pages/NewsPage';
-import NewsDetailPage from './pages/NewsDetailPage';
-import AcademicPage from './pages/AcademicPage';
-import GalleryPage from './pages/GalleryPage';
-import ContactPage from './pages/ContactPage';
-import LoginPage from './pages/LoginPage';
-import AdminLayout from './admin/AdminLayout';
-import DashboardPage from './admin/DashboardPage';
-import ManageNewsPage from './admin/ManageNewsPage';
-import ManageAcademicPage from './admin/ManageAcademicPage';
-import ManageGalleryPage from './admin/ManageGalleryPage';
-import ManageProfilePage from './admin/ManageProfilePage';
-import { AuthProvider, useAuth } from './hooks/useAuth';
+import React from "react";
+import "./index.css";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import ProfilePage from "./pages/ProfilePage";
+import NewsPage from "./pages/NewsPage";
+import NewsDetailPage from "./pages/NewsDetailPage";
+import AcademicPage from "./pages/AcademicPage";
+import GalleryPage from "./pages/GalleryPage";
+import ContactPage from "./pages/ContactPage";
+import LoginPage from "./pages/LoginPage";
+import AdminLayout from "./admin/AdminLayout";
+import DashboardPage from "./admin/DashboardPage";
+import ManageNewsPage from "./admin/ManageNewsPage";
+import ManageAcademicPage from "./admin/ManageAcademicPage";
+import ManageGalleryPage from "./admin/ManageGalleryPage";
+import ManageProfilePage from "./admin/ManageProfilePage";
+import { AuthProvider, useAuth } from "./hooks/useAuth";
 
 const App: React.FC = () => {
   return (
@@ -23,7 +24,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/profil" element={<ProfilePage />} />
-          
+
           {/* --- KEMBALI KE /berita AGAR TIDAK LAYAR PUTIH --- */}
           <Route path="/berita" element={<NewsPage />} />
           <Route path="/berita/:id" element={<NewsDetailPage />} />
