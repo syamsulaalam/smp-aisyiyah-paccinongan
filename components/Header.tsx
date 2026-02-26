@@ -25,7 +25,7 @@ const Header: React.FC = () => {
           <div className="flex items-center flex-shrink-0">
             <NavLink to="/" className="flex items-center space-x-2 sm:space-x-3 transition-opacity hover:opacity-80">
               <SchoolLogo />
-              <span className="text-base sm:text-lg md:text-xl font-bold text-blue-800 hidden sm:inline-block whitespace-nowrap">SMP Aisyiyah</span>
+              <span className="text-base sm:text-lg md:text-xl font-bold text-blue-800 hidden sm:inline-block whitespace-nowrap">SMP AP</span>
             </NavLink>
           </div>
 

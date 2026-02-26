@@ -62,8 +62,6 @@ const HomePage: React.FC = () => {
   }, []);
   return (
     <Layout>
-      {/* Hero Section - Fully Responsive */}
-      {/* Hero Section - Latar Belakang Scroll Normal */}
       <section
         className="relative text-gray-800 h-screen sm:h-[70vh] flex items-center bg-no-repeat bg-cover bg-center"
         style={{
