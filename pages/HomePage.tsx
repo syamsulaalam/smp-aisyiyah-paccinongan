@@ -65,8 +65,7 @@ const HomePage: React.FC = () => {
       <section
         className="relative text-gray-800 h-screen sm:h-[70vh] flex items-center bg-no-repeat bg-cover bg-center"
         style={{
-          backgroundImage:
-            "url('https://lh3.googleusercontent.com/gps-cs-s/AHVAweq130l_rSFS3InB-CQFmtkT-_jibE8FQpQ_-lceYdi84oof65ahk3q1NnL17riViT6WXuRK4UzYTw93us-dEP0CBFzcX76uCDzKFyOFrskVo7McCZ3Bq2uKzsiBBANmgHGKNbdOhQ=s1360-w1360-h1020-rw')",
+          backgroundImage: "url('/images/latarsekolah.webp')",
         }}
       >
         {/* Overlay Gradient agar teks terbaca jelas */}
