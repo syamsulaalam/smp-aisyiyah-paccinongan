@@ -4,7 +4,7 @@ import Layout from "../components/Layout";
 import { api } from "../services/api";
 import { NewsArticle, SchoolAgenda, GalleryPhoto } from "../types";
 
-const placeholderImage = "/images/latarsekolah.jpg";
+const placeholderImage = "/images/latarsekolah.webp";
 
 const HomePage: React.FC = () => {
   const [latestNews, setLatestNews] = useState<NewsArticle[]>([]);
