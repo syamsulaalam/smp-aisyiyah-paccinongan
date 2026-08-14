@@ -242,7 +242,7 @@ const NewsFormModal: React.FC<{
                     type="button"
                     onClick={() => void generateBeritaByTitle(formData.title)}
                     disabled={isGenerating || formData.title.trim().length === 0}
-                    className="inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:bg-purple-300"
+                    className="inline-flex items-center rounded-md bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:cursor-not-allowed disabled:bg-blue-300"
                   >
                     {isGenerating ? "Generating..." : "Generate Berita"}
                   </button>
