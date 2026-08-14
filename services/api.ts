@@ -88,6 +88,18 @@ export const api = {
     }
   },
 
+  generateNews: async (payload: { title: string; category?: string; date?: string; location?: string; additional_info?: string }) => {
+    try {
+      console.log(`✨ API.generateNews sending title: "${payload.title}"`);
+      const response = await apiInstance.post("/api/berita/generate", payload);
+      console.log(`✅ API.generateNews response:`, response.data.content?.substring(0, 100) + "...");
+      return response.data;
+    } catch (error) {
+      console.error(`❌ Gagal generate berita:`, error);
+      throw error;
+    }
+  },
+
   // C. AKADEMIK (AGENDA)
   getAcademicInfo: async () => {
     try {

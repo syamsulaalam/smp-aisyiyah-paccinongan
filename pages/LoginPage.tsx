@@ -7,6 +7,7 @@ const LoginPage: React.FC = () => {
     // --- 1. DEKLARASI VARIABEL (PENTING) ---
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     
@@ -103,16 +104,36 @@ const LoginPage: React.FC = () => {
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                                 Password
                             </label>
-                            <div className="mt-1">
+                            <div className="mt-1 relative">
                                 <input
                                     id="password"
                                     name="password"
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    className="appearance-none block w-full rounded-md border border-gray-300 px-3 py-2 pr-12 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-blue-700"
+                                    aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
+                                    aria-pressed={showPassword}
+                                >
+                                    {showPassword ? (
+                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.584 10.587a2 2 0 102.828 2.828" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.363 5.365A9.466 9.466 0 0112 5c5.523 0 10 7 10 7a18.79 18.79 0 01-5.07 5.568M6.228 6.228C3.943 7.793 2 12 2 12a18.699 18.699 0 004.522 5.227A9.457 9.457 0 0012 19c1.277 0 2.495-.252 3.606-.709" />
+                                        </svg>
+                                    ) : (
+                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    )}
+                                </button>
                             </div>
                         </div>
 

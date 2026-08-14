@@ -3,3 +3,14 @@
 body {
   font-family: "Inter", sans-serif;
 }
+
+/* Custom styles for text justification */
+.text-justify {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+/* Ensure text-justify works in prose elements */
+.prose .text-justify {
+  text-align: justify !important;
+}

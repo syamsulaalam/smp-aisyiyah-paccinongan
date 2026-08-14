@@ -43,9 +43,9 @@ const ManageProfilePage: React.FC = () => {
           kepala_sekolah: data.kepala_sekolah || "",
           status_sekolah: data.status_sekolah || "Swasta",
           akreditasi: data.akreditasi || "",
-          jumlah_siswa: parseInt(data.jumlah_siswa) || 0,
-          jumlah_guru: parseInt(data.jumlah_guru) || 0,
-          rombel: parseInt(data.rombel) || 0,
+          jumlah_siswa: Number.parseInt(data.jumlah_siswa) || 0,
+          jumlah_guru: Number.parseInt(data.jumlah_guru) || 0,
+          rombel: Number.parseInt(data.rombel) || 0,
           visi: data.visi || "",
           misi: toMultiline(data.misi),
           tujuan: toMultiline(data.tujuan),
@@ -65,14 +65,14 @@ const ManageProfilePage: React.FC = () => {
     // Convert numeric fields
     let finalValue: any = value;
     if (["jumlah_siswa", "jumlah_guru", "rombel"].includes(name)) {
-      finalValue = value === "" ? 0 : parseInt(value) || 0;
+      finalValue = value === "" ? 0 : Number.parseInt(value) || 0;
     }
 
     setFormData((prev) => ({ ...prev, [name]: finalValue }));
   };
 
   // 3. SIMPAN DATA KE BACKEND
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaving(true);
     try {
@@ -131,8 +131,8 @@ const ManageProfilePage: React.FC = () => {
             <InputGroup label="Kepala Sekolah" name="kepala_sekolah" value={formData.kepala_sekolah} onChange={handleChange} />
             <InputGroup label="Akreditasi" name="akreditasi" value={formData.akreditasi} onChange={handleChange} />
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
-              <select name="status_sekolah" value={formData.status_sekolah} onChange={handleChange} className="w-full border border-gray-300 p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
+              <label htmlFor="status_sekolah" className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+              <select id="status_sekolah" name="status_sekolah" value={formData.status_sekolah} onChange={handleChange} className="w-full border border-gray-300 p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
                 <option value="Swasta">Swasta</option>
                 <option value="Negeri">Negeri</option>
               </select>
@@ -155,13 +155,14 @@ const ManageProfilePage: React.FC = () => {
           <h3 className="text-lg font-bold text-blue-800 border-b-2 border-blue-100 mb-4 pb-1">3. Visi, Misi & Tujuan</h3>
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Visi Sekolah</label>
-              <textarea name="visi" value={formData.visi} onChange={handleChange} rows={2} className="w-full border border-gray-300 p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" />
+              <label htmlFor="visi" className="block text-sm font-semibold text-gray-700 mb-1">Visi Sekolah</label>
+              <textarea id="visi" name="visi" value={formData.visi} onChange={handleChange} rows={2} className="w-full border border-gray-300 p-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Misi (Satu per baris)</label>
+                <label htmlFor="misi" className="block text-sm font-semibold text-gray-700 mb-1">Misi (Satu per baris)</label>
                 <textarea
+                  id="misi"
                   name="misi"
                   value={formData.misi}
                   onChange={handleChange}
@@ -171,8 +172,9 @@ const ManageProfilePage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Tujuan (Satu per baris)</label>
+                <label htmlFor="tujuan" className="block text-sm font-semibold text-gray-700 mb-1">Tujuan (Satu per baris)</label>
                 <textarea
+                  id="tujuan"
                   name="tujuan"
                   value={formData.tujuan}
                   onChange={handleChange}
@@ -188,7 +190,7 @@ const ManageProfilePage: React.FC = () => {
 
         <div className="flex justify-end pt-6">
           <button type="submit" disabled={saving} className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-10 rounded-lg shadow-md transition-all disabled:opacity-50">
-            {saving ? "⏳ Menyimpan..." : "💾 Simpan Perubahan Profil"}
+            {saving ? "Menyimpan..." : "Simpan Perubahan Profil"}
           </button>
         </div>
       </form>

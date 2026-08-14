@@ -1,6 +1,4 @@
-import React, { useEffect, useState } from "react";
-
-const DashboardPage: React.FC = () => {
+import React, { useEffect, useState } from "react"; const DashboardPage: React.FC = () => {
   // State untuk menyimpan angka-angka
   const [stats, setStats] = useState({
     berita: 0,
@@ -10,8 +8,7 @@ const DashboardPage: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Ambil data saat halaman dibuka
+// Ambil data saat halaman dibuka
   useEffect(() => {
     const fetchStats = async () => {
       try {

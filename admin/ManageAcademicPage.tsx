@@ -1,4 +1,4 @@
-import React, { useEffect, useState, FormEvent, ChangeEvent } from 'react';
+import React, { useEffect, useState, ChangeEvent } from 'react';
 import { api } from '../services/api';
 import { AcademicInfo } from '../types';
 
@@ -24,7 +24,7 @@ const AcademicFormModal: React.FC<{
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e: FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSaving(true);
     try {
@@ -150,7 +150,7 @@ const ManageAcademicPage: React.FC = () => {
 
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold text-gray-800">Manajemen Info Akademik</h1>
-                <button onClick={handleAddNew} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                <button type="button" onClick={handleAddNew} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                     Tambah Info Baru
                 </button>
             </div>
@@ -181,8 +181,8 @@ const ManageAcademicPage: React.FC = () => {
                                         <p className="text-gray-900 whitespace-no-wrap">{new Date(info.date).toLocaleDateString('id-ID')}</p>
                                     </td>
                                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                                        <button onClick={() => handleEdit(info)} className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
-                                        <button onClick={() => handleDelete(info.id)} className="text-red-600 hover:text-red-900">Hapus</button>
+                                        <button type="button" onClick={() => handleEdit(info)} className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
+                                        <button type="button" onClick={() => handleDelete(info.id)} className="text-red-600 hover:text-red-900">Hapus</button>
                                     </td>
                                 </tr>
                             ))

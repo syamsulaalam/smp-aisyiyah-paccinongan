@@ -17,7 +17,7 @@ const AdminLayout: React.FC = () => {
             isActive ? 'bg-blue-700 text-white' : 'text-gray-200 hover:bg-blue-800 hover:text-white'
         }`;
 
-    const SidebarContent = () => (
+     const SidebarContent: React.FC = () => (
         <div className="flex flex-col h-full">
             <div className="p-4">
                 <h1 className="text-white text-2xl font-bold">Admin Panel</h1>
@@ -36,7 +36,7 @@ const AdminLayout: React.FC = () => {
     return (
         <div className="flex h-screen bg-gray-100">
             {/* Mobile Sidebar */}
-            <div className={`fixed inset-0 z-30 transition-opacity bg-black opacity-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`} onClick={() => setSidebarOpen(false)}></div>
+            <div className={`fixed inset-0 z-30 transition-opacity bg-black opacity-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`} role="button" onClick={() => setSidebarOpen(false)} onKeyDown={(e) => e.key === 'Escape' && setSidebarOpen(false)} tabIndex={0}></div>
             <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-blue-900 transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out`}>
                 <SidebarContent />
             </div>
@@ -50,13 +50,13 @@ const AdminLayout: React.FC = () => {
 
             <div className="flex flex-col flex-1 overflow-hidden">
                 <header className="flex items-center justify-between p-4 bg-white border-b">
-                     <button className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+                     <button type="button" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
                         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
                         </svg>
                     </button>
                     <div className="flex-1"></div>
-                    <button onClick={handleLogout} className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
+                    <button type="button" onClick={handleLogout} className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
                         Logout
                     </button>
                 </header>

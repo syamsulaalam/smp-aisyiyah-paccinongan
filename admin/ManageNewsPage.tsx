@@ -1,6 +1,7 @@
-import React, { useEffect, useState, FormEvent, ChangeEvent } from "react";
+import React, { useEffect, useRef, useState, ChangeEvent } from "react";
 import { api } from "../services/api";
 import { NewsArticle } from "../types";
+import { getInstagramEmbedUrl, isInstagramContentUrl } from "../utils/instagram";
 
 const emptyArticle: Omit<NewsArticle, "id" | "createdAt"> = {
   title: "",
@@ -8,6 +9,8 @@ const emptyArticle: Omit<NewsArticle, "id" | "createdAt"> = {
   imageUrl: "",
   status: "draft",
 };
+
+const placeholderImage = "/images/latarsekolah.webp";
 
 const NewsFormModal: React.FC<{
   article: NewsArticle | Omit<NewsArticle, "id" | "createdAt"> | null;
@@ -20,13 +23,23 @@ const NewsFormModal: React.FC<{
 
   // State Sumber Gambar & File Asli
   const [imageSource, setImageSource] = useState<"url" | "upload">("url");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  // State untuk Generate Berita
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const generateErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isEditMode = "id" in (article || {});
 
   useEffect(() => {
     const currentData = article || emptyArticle;
     setFormData(currentData);
+    setIsGenerating(false);
+    setGenerateError(null);
+    if (generateErrorTimerRef.current) {
+      clearTimeout(generateErrorTimerRef.current);
+      generateErrorTimerRef.current = null;
+    }
     // Cek apakah gambar saat ini URL biasa atau Base64/File
     if (isEditMode && currentData.imageUrl) {
       setImageSource(currentData.imageUrl.startsWith("http") ? "url" : "upload");
@@ -37,15 +50,36 @@ const NewsFormModal: React.FC<{
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    if (name === "title" && generateError) {
+      setGenerateError(null);
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  useEffect(() => {
+    return () => {
+      if (generateErrorTimerRef.current) {
+        clearTimeout(generateErrorTimerRef.current);
+      }
+    };
+  }, []);
+
+  const showGenerateError = (message: string) => {
+    if (generateErrorTimerRef.current) {
+      clearTimeout(generateErrorTimerRef.current);
+    }
+
+    setGenerateError(message);
+    generateErrorTimerRef.current = setTimeout(() => {
+      setGenerateError(null);
+      generateErrorTimerRef.current = null;
+    }, 5000);
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setSelectedFile(file); // 1. Simpan File Asli untuk dikirim ke Backend
-
-      // 2. Buat Preview Gambar agar tampil di layar
+      // Buat Preview Gambar agar tampil di layar
       const reader = new FileReader();
       reader.onloadend = () => {
         setFormData((prev) => ({ ...prev, imageUrl: reader.result as string }));
@@ -54,14 +88,61 @@ const NewsFormModal: React.FC<{
     }
   };
 
+  const generateBeritaByTitle = async (title: string) => {
+    // Validasi judul
+    if (!title || title.trim().length === 0) {
+      showGenerateError("Silakan isi judul berita terlebih dahulu.");
+      return;
+    }
+
+    setIsGenerating(true);
+    setGenerateError(null);
+
+    try {
+      console.log("Memanggil API generate berita...");
+      const response = await api.generateNews({ title: title.trim() });
+      
+      if (!response.content) {
+        throw new Error("API tidak mengembalikan konten berita");
+      }
+
+      // Auto-fill content ke field "Isi Berita"
+      setFormData((prev) => ({
+        ...prev,
+        content: response.content
+      }));
+
+      console.log("Berita berhasil di-generate!");
+    } catch (error: any) {
+      console.error("Error generate berita:", error);
+      
+      let errorMsg = "Gagal generate berita. Silakan coba lagi.";
+      if (error.response?.status === 401) {
+        errorMsg = "❌ API Key Grok tidak valid. Hubungi administrator.";
+      } else if (error.response?.status === 400) {
+        errorMsg = "❌ " + (error.response?.data?.message || "Input tidak valid");
+      } else if (error.response?.status === 500) {
+        errorMsg = "❌ Server error. Coba lagi nanti.";
+      } else if (error.response?.data?.message) {
+        errorMsg = "❌ " + error.response.data.message;
+      } else if (error.message) {
+        errorMsg = "❌ " + error.message;
+      }
+
+      showGenerateError(errorMsg);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   // --- BAGIAN PENTING: LOGIKA SIMPAN DIPERBAIKI ---
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSaving(true);
     try {
       // Validasi
       if (!formData.title || !formData.content) {
-        alert("⚠️ Judul dan Isi Berita harus diisi!");
+        alert("Judul dan Isi Berita harus diisi!");
         setIsSaving(false);
         return;
       }
@@ -77,19 +158,19 @@ const NewsFormModal: React.FC<{
           gambar: dataWithId.imageUrl, // imageUrl → gambar (bisa URL atau Base64)
         };
 
-        console.log(`📝 Mengupdate berita dengan ID ${dataWithId.id}...`);
-        console.log("📦 Payload yang dikirim:", {
+        console.log(`Mengupdate berita dengan ID ${dataWithId.id}...`);
+        console.log("Payload yang dikirim:", {
           judul: submitData.judul.substring(0, 30) + "...",
           isi: submitData.isi.substring(0, 30) + "...",
           gambarLength: submitData.gambar?.length || 0,
-          gambarIsBase64: submitData.gambar?.startsWith("data:image") ? "✅ Ya" : "❌ URL",
+          gambarIsBase64: submitData.gambar?.startsWith("data:image") ? "Ya" : "URL",
         });
 
         const response = await api.updateNews(dataWithId.id, submitData);
-        console.log("✅ Response dari backend:", response);
+        console.log("Response dari backend:", response);
 
         onSave();
-        alert("✅ Berita berhasil diupdate!");
+        alert("Berita berhasil diupdate!");
       } else {
         // UNTUK TAMBAH BERITA BARU (POST)
         const submitData = {
@@ -98,36 +179,36 @@ const NewsFormModal: React.FC<{
           gambar: formData.imageUrl, // Bisa URL atau Base64
         };
 
-        console.log("📤 Mengirim berita baru ke backend...");
-        console.log("📦 Payload yang dikirim:", {
+        console.log("Mengirim berita baru ke backend...");
+        console.log("Payload yang dikirim:", {
           judul: submitData.judul.substring(0, 30) + "...",
           isi: submitData.isi.substring(0, 30) + "...",
           gambarLength: submitData.gambar?.length || 0,
-          gambarIsBase64: submitData.gambar?.startsWith("data:image") ? "✅ Ya" : "❌ URL",
+          gambarIsBase64: submitData.gambar?.startsWith("data:image") ? "Ya" : "URL",
         });
 
         const response = await api.addNews(submitData);
-        console.log("✅ Response dari backend:", response);
+        console.log("Response dari backend:", response);
 
         onSave();
-        alert("✅ Berita berhasil ditambahkan!");
+        alert("Berita berhasil ditambahkan!");
       }
     } catch (error: any) {
-      console.error("❌ Failed to save article:", error);
+      console.error("Failed to save article:", error);
 
       let errorMsg = "Gagal menyimpan berita.";
       if (error.response?.status === 0) {
-        errorMsg = "❌ Backend tidak merespons (port 5000 mati atau CORS error).";
+        errorMsg = "Backend tidak merespons (port 5000 mati atau CORS error).";
       } else if (error.response?.status === 404) {
-        errorMsg = "❌ Endpoint tidak ditemukan. Periksa rute di backend.";
+        errorMsg = "Endpoint tidak ditemukan. Periksa rute di backend.";
       } else if (error.response?.status === 413) {
-        errorMsg = "❌ Payload terlalu besar. Kurangi ukuran gambar atau pastikan backend limit 50mb.";
+        errorMsg = "Payload terlalu besar. Kurangi ukuran gambar atau pastikan backend limit 50mb.";
       } else if (error.response?.data?.error) {
-        errorMsg = `❌ ${error.response.data.error}`;
+        errorMsg = `${error.response.data.error}`;
       } else if (error.response?.data?.message) {
-        errorMsg = `❌ ${error.response.data.message}`;
+        errorMsg = `${error.response.data.message}`;
       } else if (error.message) {
-        errorMsg = `❌ ${error.message}`;
+        errorMsg = `${error.message}`;
       }
 
       alert(errorMsg);
@@ -156,6 +237,25 @@ const NewsFormModal: React.FC<{
                   required
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => void generateBeritaByTitle(formData.title)}
+                    disabled={isGenerating || formData.title.trim().length === 0}
+                    className="inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:bg-purple-300"
+                  >
+                    {isGenerating ? "Generating..." : "Generate Berita"}
+                  </button>
+                  {isGenerating && <p className="text-sm text-blue-600">Sedang generate isi berita...</p>}
+                  {isEditMode && !isGenerating && (
+                    <p className="text-sm text-gray-500">Ubah judul lalu klik Generate Berita untuk memperbarui isi berita.</p>
+                  )}
+                </div>
+                {generateError && (
+                  <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+                    {generateError}
+                  </div>
+                )}
               </div>
               <div>
                 <label htmlFor="content" className="block text-sm font-medium text-gray-700">
@@ -169,11 +269,12 @@ const NewsFormModal: React.FC<{
                   required
                   rows={8}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  style={{ textAlign: "justify" }}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Sumber Gambar</label>
+                <div className="block text-sm font-medium text-gray-700 mb-2">Sumber Gambar</div>
                 <div className="flex items-center space-x-4">
                   <label className="flex items-center">
                     <input type="radio" name="imageSource" value="url" checked={imageSource === "url"} onChange={() => setImageSource("url")} className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300" />
@@ -219,8 +320,25 @@ const NewsFormModal: React.FC<{
 
               {formData.imageUrl && (
                 <div className="mt-2">
-                  <label className="block text-sm font-medium text-gray-700">Preview</label>
-                  <img src={formData.imageUrl} alt="Preview" className="mt-1 rounded-md border bg-gray-50 p-1 max-h-40 object-contain" />
+                  <div className="block text-sm font-medium text-gray-700">Preview</div>
+                  {isInstagramContentUrl(formData.imageUrl) && getInstagramEmbedUrl(formData.imageUrl) ? (
+                    <div className="mt-1 overflow-hidden rounded-md border bg-gray-50">
+                      <iframe
+                        src={getInstagramEmbedUrl(formData.imageUrl) || undefined}
+                        title="Preview konten Instagram"
+                        className="h-[420px] w-full"
+                      />
+                    </div>
+                  ) : (
+                    <img
+                      src={formData.imageUrl}
+                      alt="Preview"
+                      className="mt-1 rounded-md border bg-gray-50 p-1 max-h-40 object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = placeholderImage;
+                      }}
+                    />
+                  )}
                 </div>
               )}
 
@@ -312,7 +430,7 @@ const ManageNewsPage: React.FC = () => {
 
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Manajemen Berita</h1>
-        <button onClick={handleAddNew} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+        <button type="button" onClick={handleAddNew} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
           Tambah Berita Baru
         </button>
       </div>
@@ -339,7 +457,22 @@ const ManageNewsPage: React.FC = () => {
                 <tr key={article.id}>
                   <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                     <div className="flex items-center">
-                      {article.imageUrl && <img src={article.imageUrl} alt="" className="w-10 h-10 rounded-full mr-3 object-cover" />}
+                      {article.imageUrl && (
+                        isInstagramContentUrl(article.imageUrl) ? (
+                          <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 via-purple-500 to-orange-400 text-[10px] font-bold text-white">
+                            IG
+                          </div>
+                        ) : (
+                          <img
+                            src={article.imageUrl}
+                            alt=""
+                            className="w-10 h-10 rounded-full mr-3 object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = placeholderImage;
+                            }}
+                          />
+                        )
+                      )}
                       <p className="text-gray-900 whitespace-no-wrap">{article.title}</p>
                     </div>
                   </td>
@@ -353,10 +486,10 @@ const ManageNewsPage: React.FC = () => {
                     <p className="text-gray-900 whitespace-no-wrap">{new Date(article.createdAt).toLocaleDateString("id-ID")}</p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <button onClick={() => handleEdit(article)} className="text-indigo-600 hover:text-indigo-900 mr-4">
+                    <button type="button" onClick={() => handleEdit(article)} className="text-indigo-600 hover:text-indigo-900 mr-4">
                       Edit
                     </button>
-                    <button onClick={() => handleDelete(article.id)} className="text-red-600 hover:text-red-900">
+                    <button type="button" onClick={() => handleDelete(article.id)} className="text-red-600 hover:text-red-900">
                       Hapus
                     </button>
                   </td>

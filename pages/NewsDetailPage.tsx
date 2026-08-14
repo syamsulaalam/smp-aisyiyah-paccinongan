@@ -3,6 +3,19 @@ import { useParams, NavLink } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import { NewsArticle } from '../types';
+import { getInstagramEmbedUrl, isInstagramContentUrl } from '../utils/instagram';
+
+const instagramUrlPattern = /https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel|tv)\/[A-Za-z0-9_-]+\/?(?:\?[^\s]*)?/gi;
+const placeholderImage = "/images/latarsekolah.webp";
+
+const extractInstagramUrls = (text: string) => text.match(instagramUrlPattern) || [];
+
+const removeInstagramUrls = (text: string) =>
+    text
+        .replace(instagramUrlPattern, "")
+        .replace(/\n+/g, " ")
+        .replace(/\s{2,}/g, " ")
+        .trim();
 
 const NewsDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -52,6 +65,17 @@ const NewsDetailPage: React.FC = () => {
         return <Layout><div className="text-center p-10">Berita tidak ditemukan.</div></Layout>;
     }
 
+    const contentBlocks = article.content.split('\n\n').map((paragraph) => {
+        const instagramUrls = extractInstagramUrls(paragraph);
+        const cleanedText = removeInstagramUrls(paragraph);
+
+        return {
+            cleanedText,
+            instagramUrls,
+        };
+    });
+    const articleInstagramEmbedUrl = getInstagramEmbedUrl(article.imageUrl);
+
     return (
         <Layout>
             <div className="bg-white py-12">
@@ -69,18 +93,64 @@ const NewsDetailPage: React.FC = () => {
                                     </p>
                                 </header>
 
-                                <figure className="mb-8">
-                                    <img 
-                                        src={article.imageUrl} 
-                                        alt={article.title} 
-                                        className="w-full h-auto rounded-lg shadow-lg object-cover" 
-                                        style={{maxHeight: '500px'}}
-                                    />
+                                <figure className="mb-8 overflow-hidden rounded-lg shadow-lg">
+                                    {isInstagramContentUrl(article.imageUrl) && articleInstagramEmbedUrl ? (
+                                        <iframe
+                                            src={articleInstagramEmbedUrl}
+                                            title={article.title}
+                                            className="h-[760px] w-full bg-white"
+                                            scrolling="no"
+                                            allowTransparency={true}
+                                        />
+                                    ) : (
+                                        <img
+                                            src={article.imageUrl || placeholderImage}
+                                            alt={article.title}
+                                            className="w-full h-auto object-cover"
+                                            style={{maxHeight: '500px'}}
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src = placeholderImage;
+                                            }}
+                                        />
+                                    )}
                                 </figure>
 
                                 <div className="prose prose-lg max-w-none text-gray-700 space-y-4">
-                                    {article.content.split('\n\n').map((paragraph, index) => (
-                                        <p key={index}>{paragraph}</p>
+                                    {contentBlocks.map((block, index) => (
+                                        <div key={index} className="space-y-4">
+                                            {block.cleanedText && <p className="text-justify">{block.cleanedText}</p>}
+
+                                            {block.instagramUrls.map((instagramUrl, embedIndex) => {
+                                                const embedUrl = getInstagramEmbedUrl(instagramUrl);
+
+                                                if (!embedUrl) {
+                                                    return (
+                                                        <p key={`${index}-link-${embedIndex}`}>
+                                                            <a
+                                                                href={instagramUrl}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="text-blue-600 hover:text-blue-800"
+                                                            >
+                                                                Lihat konten Instagram
+                                                            </a>
+                                                        </p>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <div key={`${index}-embed-${embedIndex}`} className="not-prose overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                                                        <iframe
+                                                            src={embedUrl}
+                                                            title={`Instagram embed ${embedIndex + 1}`}
+                                                            className="h-[760px] w-full"
+                                                            allowTransparency={true}
+                                                            scrolling="no"
+                                                        />
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     ))}
                                 </div>
                             </article>
@@ -96,7 +166,14 @@ const NewsDetailPage: React.FC = () => {
                                     {recentNews.map(news => (
                                         <div key={news.id} className="flex items-center space-x-4">
                                             <NavLink to={`/berita/${news.id}`} className="flex-shrink-0">
-                                                <img src={news.imageUrl} alt={news.title} className="w-24 h-24 rounded-md object-cover" />
+                                                <img
+                                                    src={isInstagramContentUrl(news.imageUrl) ? placeholderImage : (news.imageUrl || placeholderImage)}
+                                                    alt={news.title}
+                                                    className="w-24 h-24 rounded-md object-cover"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src = placeholderImage;
+                                                    }}
+                                                />
                                             </NavLink>
                                             <div>
                                                 <h3 className="text-md font-semibold text-gray-800 hover:text-blue-700">
